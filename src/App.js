@@ -1,24 +1,23 @@
-import logo from './logo.svg';
-import './App.css';
+import { Login } from "@mui/icons-material";
+import "./App.css";
+import LoginPage from "./pages/login";
+import Navbar from "./components/navbar";
+import Footer from "./components/simpleFooter";
+import SignUp from "./pages/signUp";
+import LandingPage from "./pages/landing";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Navbar />
+      <Switch>
+        <Route exact path="/" component={LandingPage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/signup" component={SignUp} />
+      </Switch>
+      <Footer />
+    </Router>
   );
 }
 
