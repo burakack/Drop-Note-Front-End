@@ -7,16 +7,21 @@ import { AuthContext } from "../../context/AuthProvider";
 import { useContext } from "react";
 import Footer from "../../components/simpleFooter";
 import Navbar from "../../components/navbar";
+import { useNavigate } from "react-router-dom";
+import loginImage from "./login.png";
 
-const LoginPage = () => {
+const LoginPage = (props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const { login } = useContext(AuthContext);
+  const { redirect } = props;
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (localStorage.getItem("access_token")) {
       login();
+      navigate("/");
     }
   }, []);
 
@@ -28,6 +33,8 @@ const LoginPage = () => {
       })
       .then((res) => {
         localStorage.setItem("access_token", res.data);
+        console.log(redirect);
+        navigate(redirect ? redirect : "/");
         login();
       })
       .catch((error) => {
@@ -43,24 +50,28 @@ const LoginPage = () => {
 
   return (
     <>
-    <Navbar />
-      <Grid container sx={{ minHeight: "88vh" }}>
+      <Navbar />
+      <Grid container sx={{ minHeight: "91vh" }}>
         <Grid
           item
           xs={12}
-          md={6}
+          md={7}
           sx={{
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          GÖRSEL AÇIKLAMA IVIR ZIVIR
+          <img
+            src={loginImage}
+            alt="login"
+            style={{ maxWidth: "80%", maxHeight: "60%", objectFit: "cover" }}
+          />
         </Grid>
         <Grid
           item
           xs={12}
-          md={6}
+          md={5}
           sx={{
             display: "flex",
             alignItems: "center",
@@ -159,6 +170,7 @@ const LoginPage = () => {
               Hesabınız yok mu?{" "}
               <Button
                 color="primary"
+                onClick={() => navigate("/signup")}
                 sx={{
                   fontWeight: "bold",
                   padding: "0",

@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { useNavigate } from 'react-router-dom';
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const navigate = useNavigate();
 
   const handleSearch = () => {
     // Burada arama işlemini başlatın, örneğin bir API çağrısı yapabilirsiniz.
     // Sonuçları setSearchResults ile güncelleyin.
+    // Örnek olarak arama terimini loglayın
+    console.log('Searching for:', searchTerm);
   };
 
   useEffect(() => {
@@ -18,6 +22,7 @@ const SearchBar = () => {
   const handleKeyPress = (event) => {
     if (event.key === 'Enter') {
       handleSearch();
+      navigate(`/${searchTerm}`);
     }
   };
 
@@ -38,6 +43,7 @@ const SearchBar = () => {
             <IconButton
               edge="start"
               sx={{ padding: 0, marginRight: '8px', color: 'gray' }}
+              onClick={handleSearch}
             >
               <SearchIcon />
             </IconButton>
@@ -46,9 +52,9 @@ const SearchBar = () => {
       }}
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
-      onKeyPress={handleKeyPress}
+      onKeyDown={handleKeyPress}
     />
   );
-}
+};
 
 export default SearchBar;

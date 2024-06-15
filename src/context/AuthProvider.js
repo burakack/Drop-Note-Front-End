@@ -5,6 +5,9 @@ export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState(null);
+
+
 
     const login = () => {
         setIsAuthenticated(true);
@@ -17,6 +20,8 @@ const AuthProvider = ({ children }) => {
         isAuthenticated,
         login,
         logout,
+        user,
+        setUser,
     };
 
     return (

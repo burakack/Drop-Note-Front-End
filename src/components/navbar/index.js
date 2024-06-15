@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import {
   AppBar,
   Toolbar,
   Typography,
   IconButton,
   Menu,
+  Button,
   MenuItem,
   Avatar,
 } from "@mui/material";
@@ -13,14 +14,32 @@ import {
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import { AuthContext } from "../../context/AuthProvider";
-import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../axiosInstance";
 
 const Navbar = () => {
   const [chatMenuAnchor, setChatMenuAnchor] = useState(null);
   const [notificationMenuAnchor, setNotificationMenuAnchor] = useState(null);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
-  const { isAuthenticated , logout} = useContext(AuthContext);
+  const { isAuthenticated, logout,setUser } = useContext(AuthContext);
+  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+  useState(() => {
+    axiosInstance
+      .get("/users/me")
+      .then((res) => {
+        setUsername(res.data.username);
+        setUser(res.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
+  
 
+  const handleClickProfile = () => {
+    navigate("/profile");
+  };
 
   const handleChatMenuOpen = (event) => {
     setChatMenuAnchor(event.currentTarget);
@@ -49,7 +68,7 @@ const Navbar = () => {
   const handleClickLogout = () => {
     localStorage.removeItem("access_token");
     logout();
-
+    navigate("/login");
   };
 
   return (
@@ -59,17 +78,43 @@ const Navbar = () => {
           "@media (min-width: 600px)": {
             paddingLeft: 5,
             paddingRight: 1,
-            minHeight: "7vh",
+            minHeight: "4vh",
           },
         }}
       >
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Typography
+          variant="h2"
+          sx={{ cursor: "pointer" }} // Align to the right
+          onClick={() => navigate("/")}
+        >
           DropNote
         </Typography>
 
+        <Button
+          color="inherit"
+          onClick={() => navigate("/search")}
+          sx={{ marginLeft: 3 }}
+        >
+          Search
+        </Button>
+
+        <Button
+          color="inherit"
+          onClick={() => navigate("/support")}
+          sx={{ marginLeft: 3 }}
+        >
+          Support Us
+        </Button>
+
+
+
         {(isAuthenticated || localStorage.getItem("access_token")) && (
           <>
-            <IconButton color="inherit" onClick={handleChatMenuOpen}>
+            <IconButton
+              color="inherit"
+              onClick={handleChatMenuOpen}
+              sx={{ marginLeft: "auto" }}
+            >
               <ChatIcon />
             </IconButton>
             <Menu
@@ -111,30 +156,44 @@ const Navbar = () => {
                 Notification 2
               </MenuItem>
             </Menu>
-            <IconButton color="inherit" onClick={handleProfileMenuOpen}>
-          <Avatar src="https://avatars.githubusercontent.com/u/77445964?v=4" />
-        </IconButton>
-        <Menu
-          anchorEl={profileMenuAnchor}
-          open={Boolean(profileMenuAnchor)}
-          onClose={handleProfileMenuClose}
-          disableScrollLock={true}
-          sx={{
-            "& .MuiMenu-paper": {
-              marginTop: 1.5,
-              width: 400,
-            },
-          }}
-        >
-          {/* Profile dropdown menu items */}
-          <MenuItem onClick={handleProfileMenuClose}>Profile</MenuItem>
-          <MenuItem onClick={handleProfileMenuClose}>My account</MenuItem>
-          <MenuItem onClick={handleClickLogout}>Logout</MenuItem>
-        </Menu>
+            <Button
+              color="inherit"
+              onClick={handleProfileMenuOpen}
+              sx={{
+                textTransform: "none",
+                borderRadius: 0,
+                "&:hover": {
+                  borderRadius: 0,
+                },
+              }}
+            >
+              <>
+                <Avatar src="https://avatars.githubusercontent.com/u/77445964?v=4" />
+                <Typography
+                  variant="body2"
+                  sx={{ marginLeft: 1, marginRight: 1, paddingTop: 1.5 }}
+                >
+                  {username}
+                </Typography>
+              </>
+            </Button>
+            <Menu
+              anchorEl={profileMenuAnchor}
+              open={Boolean(profileMenuAnchor)}
+              onClose={handleProfileMenuClose}
+              disableScrollLock={true}
+              sx={{
+                "& .MuiMenu-paper": {
+                  marginTop: 1.5,
+                  width: 200,
+                },
+              }}
+            >
+              <MenuItem onClick={handleClickProfile}>Profile</MenuItem>
+              <MenuItem onClick={handleClickLogout}>Logout</MenuItem>
+            </Menu>
           </>
         )}
-
-
       </Toolbar>
     </AppBar>
   );
