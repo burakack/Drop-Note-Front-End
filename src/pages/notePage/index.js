@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Typography,
   Container,
@@ -25,8 +25,8 @@ import {
 } from "@mui/icons-material";
 import Navbar from "../../components/navbar";
 import axiosInstance from "../../axiosInstance";
-import { useContext } from "react";
 import { AuthContext } from "../../context/AuthProvider";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 const NotePage = () => {
   const [notes, setNotes] = useState([]);
@@ -150,7 +150,7 @@ const NotePage = () => {
       res.data.likes = 0;
       res.data.dislikes = 0;
       res.data.user = { username: isAnonymous ? "anonymous" : user?.username };
-      setNotes((prevNotes) => [...prevNotes, res.data]);
+      setNotes((prevNotes) => [res.data, ...prevNotes]);
       setNewNote("");
       setIsAnonymous(false);
     });
@@ -164,7 +164,7 @@ const NotePage = () => {
 
   const handleSaveEdit = (id) => {
     axiosInstance
-      .post("/notes/edit-note", { id, content: editNoteContent })
+      .put("/notes/update-note", { id, content: editNoteContent })
       .then((res) => {
         setNotes((prevNotes) =>
           prevNotes.map((note) =>
@@ -206,157 +206,197 @@ const NotePage = () => {
             alignItems: "center",
             padding: 2,
             marginBottom: 2,
-            marginRight: 2,
             zIndex: 2,
             position: "relative",
           }}
         >
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Yeni not ekle"
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={isAnonymous}
-                onChange={(e) => setIsAnonymous(e.target.checked)}
+          <Grid container>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Write a note..."
+                value={newNote}
+                multiline
+                rows={3}
+                onChange={(e) => setNewNote(e.target.value)}
+                sx={{ marginBottom: 2 }}
               />
-            }
-            label="Anonim olarak ekle"
-            sx={{ marginBottom: 2 }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleAddNote}
-            sx={{ zIndex: 3, position: "relative" }}
-          >
-            Not Ekle
-          </Button>
-        </Paper>
-        {notes.map((note) => (
-          <Paper
-            key={note.id}
-            sx={{
-              position: "relative",
-              alignItems: "center",
-              padding: 2,
-              marginBottom: 2,
-              zIndex: 1,
-            }}
-          >
-            <IconButton
-              onClick={(event) => handleMenuClick(event, note)}
-              sx={{
-                //make the button float to the right
-                position: "absolute",
-                right: 2,
-                top: 2,
-                margin:1,
-                zIndex: 2,
-              }}
+            </Grid>
+            <Grid
+              item
+              xs={12}
+              sx={{ display: "flex", justifyContent: "right" }}
             >
-              <MoreVert />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl) && menuNoteId === note.id}
-              onClose={handleMenuClose}
-            >
-              <MenuItem onClick={() => handleEditNote(note)}>
-                <Edit sx={{ marginRight: 1 }} />
-                Düzenle
-              </MenuItem>
-              <MenuItem onClick={() => handleDeleteNote(note.id)}>
-                <Delete sx={{ marginRight: 1 }} />
-                Sil
-              </MenuItem>
-            </Menu>
-            {editNoteId === note.id ? (
-              <>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  value={editNoteContent}
-                  onChange={(e) => setEditNoteContent(e.target.value)}
-                  sx={{ marginBottom: 2 }}
-                />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isAnonymous}
+                    onChange={(e) => setIsAnonymous(e.target.checked)}
+                  />
+                }
+                label="Add as Anonymous"
+                sx={{ marginBottom: 2 }}
+              />
+              <Grid>
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => handleSaveEdit(note.id)}
-                  sx={{ marginRight: 2, zIndex: 3, position: "relative" }}
-                >
-                  Kaydet
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    setEditNoteId(null);
-                    setEditNoteContent("");
-                  }}
+                  onClick={handleAddNote}
                   sx={{ zIndex: 3, position: "relative" }}
                 >
-                  İptal
+                  Add Note
                 </Button>
-              </>
-            ) : (
-              <>
-                <List>
-                  <ListItem>
-                    <ListItemText
-                      primary={note.content}
-                      sx={{
-                        fontWeight:
-                          note.likedByUser || note.dislikedByUser
-                            ? "bold"
-                            : "normal",
-                      }}
-                    />
-                  </ListItem>
-                </List>
-                <Grid sx={{ display: "flex" }}>
-                  <Grid>
-                    <IconButton
-                      onClick={() => handleLike(note.id)}
-                      sx={{ zIndex: 3, position: "relative" }}
-                    >
-                      <ThumbUp
-                        color={note.likedByUser ? "primary" : "inherit"}
+              </Grid>
+            </Grid>
+          </Grid>
+        </Paper>
+        {notes.length === 0 ? (
+          <Typography variant="h6" sx={{ marginTop: 2 }}>
+            No notes yet
+          </Typography>
+        ) : (
+          notes.map((note) => (
+            <Paper
+              key={note.id}
+              sx={{
+                position: "relative",
+                alignItems: "center",
+                padding: 2,
+                marginBottom: 2,
+                zIndex: 1,
+              }}
+            >
+              <IconButton
+                onClick={(event) => handleMenuClick(event, note)}
+                sx={{
+                  position: "absolute",
+                  right: 2,
+                  top: 2,
+                  margin: 1,
+                  zIndex: 2,
+                }}
+              >
+                <MoreVert />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl) && menuNoteId === note.id}
+                onClose={handleMenuClose}
+              >
+                <MenuItem
+                  onClick={() => {
+                    navigator.clipboard.writeText(note.content);
+                    handleMenuClose();
+                  }}
+                >
+                  <ContentCopyIcon sx={{ marginRight: 1, fontSize: 20 }} />
+                  Copy to Clipboard
+                </MenuItem>
+                {note.user?.username === user?.username && (
+                  <>
+                    <MenuItem onClick={() => handleEditNote(note)}>
+                      <Edit sx={{ marginRight: 1, fontSize: 20 }} />
+                      Edit Note
+                    </MenuItem>
+                    <MenuItem onClick={() => handleDeleteNote(note.id)}>
+                      <Delete sx={{ marginRight: 1, fontSize: 20 }} />
+                      Delete Note
+                    </MenuItem>
+                  </>
+                )}
+              </Menu>
+              {editNoteId === note.id ? (
+                <>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    rows={3}
+                    value={editNoteContent}
+                    onChange={(e) => setEditNoteContent(e.target.value)}
+                    sx={{ marginBottom: 2 }}
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleSaveEdit(note.id)}
+                    sx={{ marginRight: 2, zIndex: 3, position: "relative" }}
+                  >
+                    Save Note
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      setEditNoteId(null);
+                      setEditNoteContent("");
+                    }}
+                    sx={{ zIndex: 3, position: "relative" }}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <List>
+                    <ListItem>
+                      <ListItemText
+                        primary={note.content}
+                        sx={{
+                          fontWeight:
+                            note.likedByUser || note.dislikedByUser
+                              ? "bold"
+                              : "normal",
+                        }}
                       />
-                      <Typography sx={{ marginLeft: 1, marginRight: 1 }}>
-                        {note.likes}
+                    </ListItem>
+                  </List>
+                  <Grid sx={{ display: "flex" }}>
+                    <Grid>
+                      <IconButton
+                        onClick={() => handleLike(note.id)}
+                        sx={{ zIndex: 3, position: "relative" }}
+                      >
+                        <ThumbUp
+                          color={note.likedByUser ? "primary" : "inherit"}
+                        />
+                        <Typography sx={{ marginLeft: 1, marginRight: 1 }}>
+                          {note.likes}
+                        </Typography>
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDislike(note.id)}
+                        sx={{ zIndex: 3, position: "relative" }}
+                      >
+                        <ThumbDown
+                          color={note.dislikedByUser ? "error" : "inherit"}
+                        />
+                        <Typography sx={{ marginLeft: 1, marginRight: 1 }}>
+                          {note.dislikes}
+                        </Typography>
+                      </IconButton>
+                    </Grid>
+                    <Grid sx={{ marginLeft: "auto", display: "flex" }}>
+                      <Typography
+                        variant="caption"
+                        fontSize={12}
+                        sx={{ alignSelf: "flex-end",marginTop: 1, marginRight: 2 }}
+                      >
+                        {note.createdAt}
                       </Typography>
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDislike(note.id)}
-                      sx={{ zIndex: 3, position: "relative" }}
-                    >
-                      <ThumbDown
-                        color={note.dislikedByUser ? "error" : "inherit"}
-                      />
-                      <Typography sx={{ marginLeft: 1, marginRight: 1 }}>
-                        {note.dislikes}
+                      <Typography
+                        sx={{ alignSelf: "flex-end", marginTop: 1 }}
+                        fontSize={15}
+                      >
+                        {note.anonymous ? "Anonymous" :note.user.username}
                       </Typography>
-                    </IconButton>
+                    </Grid>
                   </Grid>
-                  <Grid sx={{ marginLeft: "auto" }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ alignSelf: "flex-end", marginTop: 1 }}
-                    >
-                      {note.anonymous ? "Anonymous" : note.user?.username}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </>
-            )}
-          </Paper>
-        ))}
+                </>
+              )}
+            </Paper>
+          ))
+        )}
       </Container>
     </Grid>
   );

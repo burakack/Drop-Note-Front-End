@@ -11,7 +11,7 @@ const SearchPage = () => {
       <Navbar />
       <Grid
         sx={{
-          background: theme.palette.araton.main,
+          //background: theme.palette.araton.main,
           minHeight: "96vh",
           display: "flex",
           alignItems: "center",

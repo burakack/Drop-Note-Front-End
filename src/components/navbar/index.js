@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -9,6 +9,7 @@ import {
   MenuItem,
   Avatar,
 } from "@mui/material";
+import { Grid } from "@mui/material";
 import {
   Chat as ChatIcon,
   Notifications as NotificationsIcon,
@@ -21,10 +22,12 @@ const Navbar = () => {
   const [chatMenuAnchor, setChatMenuAnchor] = useState(null);
   const [notificationMenuAnchor, setNotificationMenuAnchor] = useState(null);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
-  const { isAuthenticated, logout,setUser } = useContext(AuthContext);
+  const [notifications, setNotifications] = useState([]);
+  const { isAuthenticated, logout, setUser } = useContext(AuthContext);
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
-  useState(() => {
+
+  useEffect(() => {
     axiosInstance
       .get("/users/me")
       .then((res) => {
@@ -35,7 +38,17 @@ const Navbar = () => {
         console.log(error);
       });
   }, []);
-  
+
+  useEffect(() => {
+    axiosInstance
+      .get("/notifications/get-my-notifications")
+      .then((res) => {
+        setNotifications(res.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   const handleClickProfile = () => {
     navigate("/profile");
@@ -89,24 +102,25 @@ const Navbar = () => {
         >
           DropNote
         </Typography>
+        {localStorage.getItem("access_token") && (
+          <>
+            <Button
+              color="inherit"
+              onClick={() => navigate("/search")}
+              sx={{ marginLeft: 3 }}
+            >
+              Search
+            </Button>
 
-        <Button
-          color="inherit"
-          onClick={() => navigate("/search")}
-          sx={{ marginLeft: 3 }}
-        >
-          Search
-        </Button>
-
-        <Button
-          color="inherit"
-          onClick={() => navigate("/support")}
-          sx={{ marginLeft: 3 }}
-        >
-          Support Us
-        </Button>
-
-
+            <Button
+              color="inherit"
+              onClick={() => navigate("/support")}
+              sx={{ marginLeft: 3 }}
+            >
+              Support
+            </Button>
+          </>
+        )}
 
         {(isAuthenticated || localStorage.getItem("access_token")) && (
           <>
@@ -149,12 +163,45 @@ const Navbar = () => {
                 },
               }}
             >
-              <MenuItem onClick={handleNotificationMenuClose}>
-                Notification 1
-              </MenuItem>
-              <MenuItem onClick={handleNotificationMenuClose}>
-                Notification 2
-              </MenuItem>
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <MenuItem
+                    key={notification.id}
+                    onClick={handleNotificationMenuClose}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      padding: 2, 
+                      marginLeft:2,
+                      marginRight:2
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      fontSize={14}
+                      sx={{
+                        fontStyle: "italic",
+                        marginBottom: 1,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {notification.title}
+                    </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontStyle: "italic", marginBottom: 1 }}
+                      fontSize={12}
+                    >
+                      {notification.content}
+                    </Typography>
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem onClick={handleNotificationMenuClose}>
+                  No notifications
+                </MenuItem>
+              )}
             </Menu>
             <Button
               color="inherit"

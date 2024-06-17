@@ -7,6 +7,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthProvider";
 import { useContext } from "react";
 import SupportPage from "./pages/support";
+import LandingPage from "./pages/landing";
+import User from "./pages/user";
 import NotePage from "./pages/notePage";
 
 function App() {
@@ -18,7 +20,7 @@ function App() {
         path="/"
         element={
           isAuthenticated || localStorage.getItem("access_token") ? (
-            <></>
+            <LandingPage />
           ) : (
             <LoginPage redirect="/" />
           )
@@ -28,8 +30,9 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/profile" element={<Profile />} />
-       <Route path="/support" element={<SupportPage />} /> 
-      <Route path="*" element={<NotePage/>} />
+      <Route path="/support" element={<SupportPage />} />
+      <Route path="/user/:username" element={<User />} />
+      <Route path="*" element={<NotePage />} />
     </Routes>
   );
 }

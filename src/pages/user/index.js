@@ -4,76 +4,47 @@ import {
   Card,
   CardContent,
   CardMedia,
-  Button,
-  TextField,
   Typography,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Divider,
 } from "@mui/material";
 import Navbar from "../../components/navbar";
 import { useEffect, useState } from "react";
 import axiosInstance from "../../axiosInstance";
-import EditIcon from "@mui/icons-material/Edit";
-import CancelIcon from "@mui/icons-material/Cancel";
-import SaveIcon from "@mui/icons-material/Save";
+import { useParams } from "react-router-dom";
 
-const Profile = (props) => {
-  const [username, setUsername] = useState("");
-  const [description, setDescription] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [friends, setFriends] = useState([]);
-  const [notes, setNotes] = useState([]);
-  const [notSavedDescription, setNotSavedDescription] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [userImage, setUserImage] = useState(null);
-  const [open, setOpen] = useState(false);
-
-  const handleFileChange = (event) => {
-    console.log(event.target.files[0]);
-    setSelectedFile(event.target.files[0]);
-  };
+const UserProfile = (props) => {
+  const { username } = useParams();
+  const [userDetails, setUserDetails] = useState({
+    username: "",
+    description: "",
+    userImage: null,
+    notes: [],
+    friends: [],
+  });
 
   useEffect(() => {
-    axiosInstance.get("/users/me").then((res) => {
-      setUsername(res.data.username);
-      setDescription(res.data.description);
-    });
-    axiosInstance.get("/friendship/my-friendships").then((res) => {
-      setFriends(res.data);
-    });
-    axiosInstance.get("/notes/get-my-notes").then((res) => {
-      setNotes(res.data);
-    });
-  }, []);
-
-  const handleImageUpload = () => {
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    axiosInstance.post("/users/upload-user-image", formData).then((res) => {
-      setUserImage(res.data);
-      setOpen(false);
-    });
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-    setNotSavedDescription(description);
-  };
-
-  const handleSave = () => {
-    setIsEditing(false);
-    axiosInstance
-      .post("/users/edit-user-information", {
-        description: notSavedDescription,
-      })
-      .then((res) => {
-        setDescription(notSavedDescription);
+    axiosInstance.get(`/users/${username}`).then((res) => {
+      setUserDetails({
+        username: res.data.username,
+        description: res.data.description,
+        userImage: res.data.userImage,
       });
-  };
+
+      axiosInstance.get(`/notes/get-user-notes/${username}`).then((res) => {
+        setUserDetails((prev) => ({
+          ...prev,
+          notes: res.data,
+        }));
+      });
+
+      axiosInstance.get(`/friendship/user-friendships/${username}`).then((res) => {
+        setUserDetails((prev) => ({
+          ...prev,
+          friends: res.data,
+        }));
+      });
+    });
+  }, [username]);
 
   return (
     <Grid style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
@@ -94,27 +65,25 @@ const Profile = (props) => {
             }}
           >
             <Grid style={{ marginLeft: "20px" }}>
-              {userImage ? (
+              {userDetails.userImage ? (
                 <CardMedia
                   component="img"
-                  image={userImage}
-                  alt="Generic placeholder image"
-                  sx={{ width: "150px", "&:hover": { cursor: "pointer" } }}
-                  onClick={() => setOpen(true)}
+                  image={userDetails.userImage}
+                  alt="User Image"
+                  sx={{ width: "150px" }}
                 />
               ) : (
                 <CardMedia
                   component="img"
                   image="https://www.w3schools.com/howto/img_avatar.png"
                   alt="Generic placeholder image"
-                  sx={{ width: "150px", "&:hover": { cursor: "pointer" } }}
-                  onClick={() => setOpen(true)}
+                  sx={{ width: "150px" }}
                 />
               )}
             </Grid>
             <Grid style={{ marginLeft: "20px", marginTop: "130px" }}>
               <Typography variant="h5" color={"white"}>
-                {username}
+                {userDetails.username}
               </Typography>
             </Grid>
             <Grid container justifyContent="flex-end" alignItems="center">
@@ -124,7 +93,7 @@ const Profile = (props) => {
                   variant="body1"
                   sx={{ textAlign: "center" }}
                 >
-                  {notes.length}
+                  {userDetails.notes?.length}
                 </Typography>
                 <Typography color={"white"} variant="body2">
                   Notes
@@ -136,7 +105,7 @@ const Profile = (props) => {
                   variant="body1"
                   sx={{ textAlign: "center" }}
                 >
-                  {friends.length}
+                  {userDetails.friends?.length}
                 </Typography>
                 <Typography color={"white"} variant="body2">
                   Friends
@@ -159,67 +128,20 @@ const Profile = (props) => {
               >
                 About
               </Typography>
-              {isEditing ? (
-                <Grid
-                  style={{
-                    backgroundColor: "#f8f9fa",
-                    padding: "20px",
-                    height: "100%",
-                  }}
+              <Grid
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "20px",
+                  height: "100%",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ fontStyle: "italic", marginBottom: "10px" }}
                 >
-                  <TextField
-                    placeholder="Something about you"
-                    multiline
-                    rows={2}
-                    maxRows={4}
-                    //default value is description
-                    value={notSavedDescription}
-                    onChange={(e) => setNotSavedDescription(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSave();
-                      }
-                    }}
-                    sx={{ width: "100%" }}
-                  />
-                  <Button
-                    color="primary"
-                    startIcon={<SaveIcon />}
-                    onClick={handleSave}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    color="primary"
-                    startIcon={<CancelIcon />}
-                    onClick={() => setIsEditing(false)}
-                  >
-                    Cancel
-                  </Button>
-                </Grid>
-              ) : (
-                <Grid
-                  style={{
-                    backgroundColor: "#f8f9fa",
-                    padding: "20px",
-                    height: "100%",
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{ fontStyle: "italic", marginBottom: "10px" }}
-                  >
-                    {description || "No description"}
-                  </Typography>
-                  <Button
-                    color="primary"
-                    startIcon={<EditIcon />}
-                    onClick={handleEdit}
-                  >
-                    Edit
-                  </Button>
-                </Grid>
-              )}
+                  {userDetails.description || "No description"}
+                </Typography>
+              </Grid>
             </Grid>
             <Grid sx={{ marginBottom: "20px", paddingLeft: 5, width: "80%" }}>
               <Typography
@@ -268,12 +190,12 @@ const Profile = (props) => {
                   display: "flex",
                 }}
               >
-                {notes.length === 0 ? (
+                {userDetails.notes?.length === 0 ? (
                   <Typography variant="body2" sx={{ fontStyle: "italic" }}>
                     You have no notes yet.
                   </Typography>
                 ) : (
-                  notes.map((note) => (
+                  userDetails.notes?.map((note) => (
                     <Grid
                       key={note.id}
                       item
@@ -299,31 +221,8 @@ const Profile = (props) => {
           </CardContent>
         </Card>
       </Container>
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"Upload Image"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Please choose an image to upload.
-          </DialogContentText>
-          <input
-            type="file"
-            name="file"
-            onChange={handleFileChange}
-            accept="image/*"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleImageUpload}>Upload</Button>
-        </DialogActions>
-      </Dialog>
     </Grid>
   );
 };
 
-export default Profile;
+export default UserProfile;

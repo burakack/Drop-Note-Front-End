@@ -4,14 +4,14 @@ import { useTheme } from "@mui/material/styles";
 import SearchBar from "../../components/searchBar";
 import Navbar from "../../components/navbar";
 
-const SearchPage = () => {
+const LandingPage = () => {
   const theme = useTheme();
   return (
     <>
       <Navbar />
       <Grid
         sx={{
-          background: theme.palette.araton.main,
+          //background: theme.palette.araton.main,
           minHeight: "96vh",
           display: "flex",
           alignItems: "center",
@@ -34,4 +34,4 @@ const SearchPage = () => {
   );
 };
 
-export default SearchPage;
+export default LandingPage;
